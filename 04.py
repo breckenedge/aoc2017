@@ -5,7 +5,8 @@ def count_valid_passphrases(strings):
 
 def is_valid_passphrase(string):
     words = string.split(" ")
-    return len(words) == len(set(words))
+    s_words = list(map(lambda w: ''.join(sorted(list(w))), words))
+    return len(s_words) == len(set(s_words))
 
 if __name__ == '__main__':
     print(count_valid_passphrases(["aa bb cc dd ee", "aa bb cc dd aa", "aa bb cc dd aaa"]))
