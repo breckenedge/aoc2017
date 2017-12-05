@@ -6,7 +6,10 @@ def steps_to_escape(instructions):
     esc = len(instructions)
     while pos >= 0 and pos < esc:
         curr = instructions[pos]
-        instructions[pos] = instructions[pos] + 1
+        if curr >= 3:
+            instructions[pos] = instructions[pos] - 1
+        else:
+            instructions[pos] = instructions[pos] + 1
         pos = pos + curr
         steps += 1
     return steps
