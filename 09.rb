@@ -5,6 +5,7 @@ GRP_CLOSE = '}'
 GBG_OPEN = '<'
 GBG_CLOSE = '>'
 ESC = '!'
+CHAR = 'x'
 
 class Stream
   attr_reader :pos, :source, :tokens
@@ -32,34 +33,52 @@ class Stream
         @tokens << GBG_CLOSE
       when ESC
         pos += 1
+      else
+        @tokens << CHAR
       end
       pos += 1
     end
+
+    puts @tokens.join
 
     in_garbage = false
     depth = 0
     depths = []
 
-    puts @tokens.join
+    garbage_count = 0
 
     @tokens.each do |token|
       case token
       when GBG_OPEN
-        in_garbage = true
+        if in_garbage
+          garbage_count += 1
+        else
+          in_garbage = true
+        end
       when GBG_CLOSE
-        in_garbage = false
+        if in_garbage
+          in_garbage = false
+        end
       when GRP_OPEN
         unless in_garbage
           depth += 1
+        else
+          garbage_count += 1
         end
       when GRP_CLOSE
         unless in_garbage
           depths << depth
           depth -= 1
+        else
+          garbage_count += 1
+        end
+      else
+        if in_garbage
+          garbage_count += 1
         end
       end
     end
-    pp depths.sum
+    puts "#{@tokens.join} #{garbage_count}"
   end
 
   def score
@@ -67,8 +86,7 @@ class Stream
   end
 end
 
-sources = ARGF.read.split
+sources = ARGF.read.split("\n")
 
 streams = sources.map { |s| Stream.new(s) }
 streams.each(&:read)
-streams.each { |s| puts s.tokens.join(", ") }
