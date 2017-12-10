@@ -32,6 +32,10 @@ class CircularList
   def join(str)
     array.join(str)
   end
+
+  def each_slice(size)
+    array.each_slice(size)
+  end
 end
 
 if __FILE__ == $0
