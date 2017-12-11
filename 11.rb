@@ -14,14 +14,17 @@ if __FILE__ == $0
 
   inputs.each do |path|
     child_pos = HexCoord.new(0, 0, 0)
+    max = 0
 
     path.each do |m|
       child_pos.x = child_pos.x + MOVES[m].x
       child_pos.y = child_pos.y + MOVES[m].y
       child_pos.z = child_pos.z + MOVES[m].z
+      dist = [child_pos.x.abs, child_pos.y.abs, child_pos.z.abs].max
+      max = dist if dist > max
     end
 
-    puts [child_pos.x.abs, child_pos.y.abs, child_pos.z.abs].max
+    puts max
   end
 end
 
