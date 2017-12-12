@@ -63,6 +63,12 @@ end
 
 count = 0
 
-visit_node($nodes[0])
+$visited = []
 
-puts $visited.size
+$nodes.each_value do |n|
+  next if $visited.include?(n)
+  $visited += visit_node(n, [])
+  count += 1
+end
+
+puts count
