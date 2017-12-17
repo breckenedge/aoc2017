@@ -1,4 +1,6 @@
 class CircularList
+  include Enumerable
+
   attr_reader :array, :size
 
   def initialize(array, size = array.size)
@@ -27,6 +29,19 @@ class CircularList
       end
       0.upto(length_or_value - 1).each { |l| self[j + l] = value_or_nil[l] }
     end
+  end
+
+  def each(&block)
+    @array.each(&block)
+  end
+
+  def index(obj)
+    @array.index(obj)
+  end
+
+  def insert(index, obj)
+    @array.insert(index, obj)
+    @size = @array.size
   end
 
   def join(str)
