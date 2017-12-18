@@ -1,36 +1,76 @@
 require 'pry'
 
 class Duet
-  attr_reader :output
+  attr_reader :song, :programs, :instructions
 
   def initialize(song)
-    @song = parse(song)
-    @registers = {}
-    ('a'..'p').each { |chr| @registers[chr] = 0 }
-    @last_sound_played = nil
-    @head = 0
-    @output = []
+    @instructions = parse(song)
+    @programs = [
+      Program.new(self, 0),
+      Program.new(self, 1)
+    ]
   end
 
   def parse(strings)
-    @instructions = strings.map { |line|
-      line.split(' ')
-    }
+    strings.map { |line| line.split(' ') }
   end
 
-  def play(&block)
+  def deadlock?
+    @programs.all? { |p| p.waiting && p.queue.empty? }
+  end
+
+  def play
     loop do
-      break if @head.abs > (@instructions.length - 1)
-      puts @instructions[@head].join(' ')
-      send(*@instructions[@head])
+      @programs.each do |p|
+        p.play
+      end
+      if deadlock?
+        break
+      end
+    end
+    puts @programs[1].sends
+  end
+end
+
+class Program
+  attr_accessor :waiting
+  attr_reader :queue, :sends
+
+  def initialize(duet, id)
+    @duet = duet
+    @id = id
+    @registers = {}
+    ('a'..'p').each { |chr| @registers[chr] = 0 }
+    @registers['p'] = id
+    @head = 0
+    @queue = []
+    @sends = 0
+    @waiting = false
+  end
+
+  def instructions
+    @duet.instructions
+  end
+
+  def play
+    loop do
+      send(*instructions[@head])
+      if @waiting && @queue.empty?
+        break
+      end
       @head += 1
     end
   end
 
-  # plays a sound with freq equal to X
+  def other
+    @duet.programs.find { |p| self != p }
+  end
+
+  # send X to the other program
   def snd(x)
-    @last_sound_played = @registers[x]
-    @output << @last_sound_played
+    @sends += 1
+    other.queue.push(@registers.fetch(x, x))
+    other.waiting = false
   end
 
   # set register X to value of Y
@@ -46,43 +86,43 @@ class Duet
     @registers[x] = @registers[x] * @registers.fetch(y, y.to_i)
   end
 
-  # X modulo Y
   def mod(x, y)
     @registers[x] = @registers[x] % @registers.fetch(y, y.to_i)
   end
 
-  # recovers the frequency of the last sound played, but only if the value of X is greater than zero
+  # pop from queue into register X
   def rcv(x)
-    if @registers.fetch(x, -1) > 0
-      @registers[x] = @last_sound_played
-      print @last_sound_played
-      exit
+    if queue.any?
+      @waiting = false
+      @registers[x] = queue.shift
+    else
+      @waiting = true
     end
   end
 
   # jumps with an offset of Y but only if X is greater than zero
   def jgz(x, y)
-    if @registers[x] && @registers[x] > 0
-      @head += @registers.fetch(y, y.to_i) - 1
+    if x =~ /[a-p]/
+      if @registers[x] > 0
+        @head += @registers.fetch(y, y.to_i) - 1
+      end
+    elsif Integer(x) > 0
+      @head += Integer(y.to_i) - 1
     end
   end
 end
 
 if __FILE__ == $0
   input = (ARGV.empty? ? DATA : ARGF).readlines.map(&:chomp)
-  d = Duet.new(input)
-  d.play
-  puts d.output.last
+  duet = Duet.new(input)
+  duet.play
 end
 
 __END__
-set a 1
-add a 2
-mul a a
-mod a 5
-snd a
-set a 0
+snd 1
+snd 2
+snd p
 rcv a
-jgz a -1
-set a 1
-jgz a -2
+rcv b
+rcv c
+rcv d
