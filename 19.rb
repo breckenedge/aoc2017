@@ -20,6 +20,7 @@ if __FILE__ == $0
 
   position = [input[0].index('|'), 0]
   direction = :s
+  steps = 0
 
   loop do
     puts direction
@@ -56,7 +57,10 @@ if __FILE__ == $0
       visits << next_input
       position = next_position
     end
+    steps += 1
   end
+
+  puts steps + 1
 end
 
 __END__
