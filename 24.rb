@@ -57,11 +57,9 @@ if __FILE__ == $0
   routes = roots.flat_map { |r|
     g.routes_from(0, r)
   }
-  #puts "Strength\tRoute"
-  #routes.each { |r|
-  #  puts "#{r.sum { |e| e.nodes.sum }}\t#{r.join('--')}"
-  #}
-  strongest = routes.max_by { |r| r.sum { |e| e.nodes.sum } }
+  longest = routes.max_by(&:size)
+  strongest = routes.select { |r| r.size == longest.size }
+    .max_by { |r| r.sum { |e| e.nodes.sum } }
   puts strongest.sum { |e| e.nodes.sum }
 end
 
